@@ -16,6 +16,11 @@ const goldText = document.querySelector("#goldText");
 const monsterStats = document.querySelector("#monsterStats");
 const monsterName = document.querySelector("#monsterName");
 const monsterHealthText = document.querySelector("#monsterHealth");
+const weaponText = document.querySelector("#weaponText");
+const inventoryText = document.querySelector("#inventoryText");
+const questTrain = document.querySelector("#questTrain");
+const questGear = document.querySelector("#questGear");
+const questDragon = document.querySelector("#questDragon");
 const weapons = [
   { name: 'stick', power: 5 },
   { name: 'dagger', power: 30 },
@@ -76,11 +81,11 @@ const locations = [
     "button functions": [restart, restart, restart],
     text: "You die. ☠️"
   },
-  { 
-    name: "win", 
-    "button text": ["REPLAY?", "REPLAY?", "REPLAY?"], 
-    "button functions": [restart, restart, restart], 
-    text: "You defeat the dragon! YOU WIN THE GAME! 🎉" 
+  {
+    name: "win",
+    "button text": ["REPLAY?", "REPLAY?", "REPLAY?"],
+    "button functions": [restart, restart, restart],
+    text: "You defeat the dragon! YOU WIN THE GAME! 🎉"
   },
   {
     name: "easter egg",
@@ -90,10 +95,30 @@ const locations = [
   }
 ];
 
+function refreshPlayerPanel() {
+  weaponText.innerText = weapons[currentWeapon].name;
+  inventoryText.innerText = inventory.join(", ");
+}
+
+function refreshQuestLog() {
+  questTrain.classList.toggle("complete", xp >= monsters[0].level);
+  questGear.classList.toggle("complete", currentWeapon >= 1);
+  questDragon.classList.toggle("complete", fighting === 2 && monsterHealth <= 0);
+}
+
+function syncHud() {
+  goldText.innerText = gold;
+  healthText.innerText = health;
+  xpText.innerText = xp;
+  refreshPlayerPanel();
+  refreshQuestLog();
+}
+
 // initialize buttons
 button1.onclick = goStore;
 button2.onclick = goCave;
 button3.onclick = fightDragon;
+syncHud();
 
 function update(location) {
   monsterStats.style.display = "none";
@@ -104,6 +129,7 @@ function update(location) {
   button2.onclick = location["button functions"][1];
   button3.onclick = location["button functions"][2];
   text.innerText = location.text;
+  refreshQuestLog();
 }
 
 function goTown() {
@@ -122,8 +148,7 @@ function buyHealth() {
   if (gold >= 10) {
     gold -= 10;
     health += 10;
-    goldText.innerText = gold;
-    healthText.innerText = health;
+    syncHud();
   } else {
     text.innerText = "You do not have enough gold to buy health.";
   }
@@ -134,11 +159,11 @@ function buyWeapon() {
     if (gold >= 30) {
       gold -= 30;
       currentWeapon++;
-      goldText.innerText = gold;
       let newWeapon = weapons[currentWeapon].name;
       text.innerText = "You now have a " + newWeapon + ".";
       inventory.push(newWeapon);
-      text.innerText += " In your inventory you have: " + inventory;
+      text.innerText += " In your inventory you have: " + inventory.join(", ") + ".";
+      syncHud();
     } else {
       text.innerText = "You do not have enough gold to buy a weapon.";
     }
@@ -152,10 +177,11 @@ function buyWeapon() {
 function sellWeapon() {
   if (inventory.length > 1) {
     gold += 15;
-    goldText.innerText = gold;
-    let currentWeapon = inventory.shift();
-    text.innerText = "You sold a " + currentWeapon + ".";
-    text.innerText += " In your inventory you have: " + inventory;
+    let soldWeapon = inventory.shift();
+    currentWeapon = Math.max(0, currentWeapon - 1);
+    text.innerText = "You sold a " + soldWeapon + ".";
+    text.innerText += " In your inventory you have: " + inventory.join(", ") + ".";
+    syncHud();
   } else {
     text.innerText = "Don't sell your only weapon!";
   }
@@ -189,11 +215,11 @@ function attack() {
   text.innerText += " You attack it with your " + weapons[currentWeapon].name + ".";
   health -= getMonsterAttackValue(monsters[fighting].level);
   if (isMonsterHit()) {
-    monsterHealth -= weapons[currentWeapon].power + Math.floor(Math.random() * xp) + 1;    
+    monsterHealth -= weapons[currentWeapon].power + Math.floor(Math.random() * xp) + 1;
   } else {
     text.innerText += " You miss.";
   }
-  healthText.innerText = health;
+  syncHud();
   monsterHealthText.innerText = monsterHealth;
   if (health <= 0) {
     lose();
@@ -203,6 +229,7 @@ function attack() {
   if (Math.random() <= .1 && inventory.length !== 1) {
     text.innerText += " Your " + inventory.pop() + " breaks.";
     currentWeapon--;
+    syncHud();
   }
 }
 
@@ -223,8 +250,7 @@ function dodge() {
 function defeatMonster() {
   gold += Math.floor(monsters[fighting].level * 6.7);
   xp += monsters[fighting].level;
-  goldText.innerText = gold;
-  xpText.innerText = xp;
+  syncHud();
   update(locations[4]);
 }
 
@@ -242,9 +268,7 @@ function restart() {
   gold = 50;
   currentWeapon = 0;
   inventory = ["stick"];
-  goldText.innerText = gold;
-  healthText.innerText = health;
-  xpText.innerText = xp;
+  syncHud();
   goTown();
 }
 
@@ -272,11 +296,11 @@ function pick(guess) {
   if (numbers.includes(guess)) {
     text.innerText += "Right! You win 20 gold!";
     gold += 20;
-    goldText.innerText = gold;
+    syncHud();
   } else {
     text.innerText += "Wrong! You lose 10 health!";
     health -= 10;
-    healthText.innerText = health;
+    syncHud();
     if (health <= 0) {
       lose();
     }
