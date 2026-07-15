@@ -2,29 +2,60 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="style.css">
     <title>RPG - Dragon Repeller</title>
   </head>
   <body>
-    <div id="game">
-      <div id="stats">
+    <main id="game" aria-labelledby="gameTitle">
+      <header class="hero">
+        <p class="eyebrow">Tiny browser RPG</p>
+        <h1 id="gameTitle">Dragon Repeller</h1>
+        <p class="subtitle">Train, gear up, and save the town from the dragon.</p>
+      </header>
+
+      <section id="stats" aria-label="Player stats">
         <span class="stat">XP: <strong><span id="xpText">0</span></strong></span>
         <span class="stat">Health: <strong><span id="healthText">100</span></strong></span>
         <span class="stat">Gold: <strong><span id="goldText">50</span></strong></span>
-      </div>
-      <div id="controls">
-        <button id="button1" >Go to store</button>
-        <button id="button2" >Go to cave</button>
-        <button id="button3">Fight dragon</button>
-      </div>
-      <div id="monsterStats">
+      </section>
+
+      <section id="playerPanel" aria-label="Player details">
+        <div>
+          <span class="panel-label">Weapon</span>
+          <strong id="weaponText">stick</strong>
+        </div>
+        <div>
+          <span class="panel-label">Inventory</span>
+          <strong id="inventoryText">stick</strong>
+        </div>
+      </section>
+
+      <section id="controls" aria-label="Available actions">
+        <button id="button1" type="button">Go to store</button>
+        <button id="button2" type="button">Go to cave</button>
+        <button id="button3" type="button">Climb mountain</button>
+      </section>
+
+      <section id="monsterStats" aria-label="Monster stats">
         <span class="stat">Monster Name: <strong><span id="monsterName"></span></strong></span>
+        <span class="stat">Level: <strong><span id="monsterLevel"></span></strong></span>
         <span class="stat">Health: <strong><span id="monsterHealth"></span></strong></span>
+      </section>
+
+      <section id="questLog" aria-label="Quest log">
+        <h2>Quest log</h2>
+        <ul>
+          <li id="questTrain">Defeat a slime to start your training.</li>
+          <li id="questGear">Clear the cave and forest before climbing the mountain.</li>
+          <li id="questDragon">Defeat the dragon and free the town.</li>
+        </ul>
+      </section>
+
+      <div id="text" role="status" aria-live="polite">
+        Welcome to Dragon Repeller. You must defeat the dragon that is preventing people from leaving the town. You are in the town square. Where do you want to go? Use the buttons above or press 1, 2, and 3 on your keyboard.
       </div>
-      <div id="text">
-        Welcome to Dragon Repeller. You must defeat the dragon that is preventing people from leaving the town. You are in the town square. Where do you want to go? Use the buttons above.
-      </div>
-    </div>
+    </main>
     <script src="./script.js"></script>
   </body>
 </html>
