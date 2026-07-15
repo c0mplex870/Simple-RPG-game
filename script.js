@@ -5,6 +5,7 @@ let currentWeapon = 0;
 let fighting;
 let monsterHealth;
 let inventory = ["stick"];
+let defeatedMonsters = new Set();
 
 const button1 = document.querySelector('#button1');
 const button2 = document.querySelector("#button2");
@@ -15,6 +16,7 @@ const healthText = document.querySelector("#healthText");
 const goldText = document.querySelector("#goldText");
 const monsterStats = document.querySelector("#monsterStats");
 const monsterName = document.querySelector("#monsterName");
+const monsterLevelText = document.querySelector("#monsterLevel");
 const monsterHealthText = document.querySelector("#monsterHealth");
 const weaponText = document.querySelector("#weaponText");
 const inventoryText = document.querySelector("#inventoryText");
@@ -34,22 +36,38 @@ const monsters = [
     health: 15
   },
   {
+    name: "goblin scout",
+    level: 5,
+    health: 35
+  },
+  {
     name: "fanged beast",
     level: 8,
     health: 60
   },
   {
+    name: "orc marauder",
+    level: 12,
+    health: 100
+  },
+  {
+    name: "shadow wraith",
+    level: 16,
+    health: 180
+  },
+  {
     name: "dragon",
-    level: 20,
-    health: 300
+    level: 24,
+    health: 340
   }
-]
+];
+const DRAGON_INDEX = monsters.length - 1;
 const locations = [
   {
     name: "town square",
-    "button text": ["Go to store", "Go to cave", "Fight dragon"],
-    "button functions": [goStore, goCave, fightDragon],
-    text: "You are in the town square. You see a sign that says \"Store\"."
+    "button text": ["Go to store", "Explore cave", "Climb mountain"],
+    "button functions": [goStore, goCave, goMountain],
+    text: "You are in the town square. Paths lead to the store, the cave, and the mountain pass."
   },
   {
     name: "store",
@@ -59,9 +77,21 @@ const locations = [
   },
   {
     name: "cave",
-    "button text": ["Fight slime", "Fight fanged beast", "Go to town square"],
-    "button functions": [fightSlime, fightBeast, goTown],
-    text: "You enter the cave. You see some monsters."
+    "button text": ["Fight slime", "Fight goblin scout", "Go to forest"],
+    "button functions": [fightSlime, fightGoblin, goForest],
+    text: "You enter the cave. Low-level monsters skitter between the rocks."
+  },
+  {
+    name: "forest",
+    "button text": ["Fight fanged beast", "Fight orc marauder", "Go to town square"],
+    "button functions": [fightBeast, fightOrc, goTown],
+    text: "You push into the forest. Stronger enemies patrol the old road."
+  },
+  {
+    name: "mountain",
+    "button text": ["Fight shadow wraith", "Fight dragon", "Go to town square"],
+    "button functions": [fightWraith, fightDragon, goTown],
+    text: "You climb the mountain pass. The air crackles with dangerous magic."
   },
   {
     name: "fight",
@@ -101,9 +131,11 @@ function refreshPlayerPanel() {
 }
 
 function refreshQuestLog() {
-  questTrain.classList.toggle("complete", xp >= monsters[0].level);
-  questGear.classList.toggle("complete", currentWeapon >= 1);
-  questDragon.classList.toggle("complete", fighting === 2 && monsterHealth <= 0);
+  const clearedCaveAndForest = [0, 1, 2, 3].every((monsterIndex) => defeatedMonsters.has(monsterIndex));
+
+  questTrain.classList.toggle("complete", defeatedMonsters.has(0));
+  questGear.classList.toggle("complete", clearedCaveAndForest);
+  questDragon.classList.toggle("complete", defeatedMonsters.has(DRAGON_INDEX));
 }
 
 function syncHud() {
@@ -117,7 +149,7 @@ function syncHud() {
 // initialize buttons
 button1.onclick = goStore;
 button2.onclick = goCave;
-button3.onclick = fightDragon;
+button3.onclick = goMountain;
 syncHud();
 
 function update(location) {
@@ -142,6 +174,14 @@ function goStore() {
 
 function goCave() {
   update(locations[2]);
+}
+
+function goForest() {
+  update(locations[3]);
+}
+
+function goMountain() {
+  update(locations[4]);
 }
 
 function buyHealth() {
@@ -192,26 +232,42 @@ function fightSlime() {
   goFight();
 }
 
-function fightBeast() {
+function fightGoblin() {
   fighting = 1;
   goFight();
 }
 
-function fightDragon() {
+function fightBeast() {
   fighting = 2;
   goFight();
 }
 
+function fightOrc() {
+  fighting = 3;
+  goFight();
+}
+
+function fightWraith() {
+  fighting = 4;
+  goFight();
+}
+
+function fightDragon() {
+  fighting = DRAGON_INDEX;
+  goFight();
+}
+
 function goFight() {
-  update(locations[3]);
+  update(locations[5]);
   monsterHealth = monsters[fighting].health;
   monsterStats.style.display = "block";
   monsterName.innerText = monsters[fighting].name;
+  monsterLevelText.innerText = monsters[fighting].level;
   monsterHealthText.innerText = monsterHealth;
 }
 
 function attack() {
-  text.innerText = "The " + monsters[fighting].name + " attacks.";
+  text.innerText = "The level " + monsters[fighting].level + " " + monsters[fighting].name + " attacks.";
   text.innerText += " You attack it with your " + weapons[currentWeapon].name + ".";
   health -= getMonsterAttackValue(monsters[fighting].level);
   if (isMonsterHit()) {
@@ -224,7 +280,7 @@ function attack() {
   if (health <= 0) {
     lose();
   } else if (monsterHealth <= 0) {
-    fighting === 2 ? winGame() : defeatMonster();
+    fighting === DRAGON_INDEX ? winGame() : defeatMonster();
   }
   if (Math.random() <= .1 && inventory.length !== 1) {
     text.innerText += " Your " + inventory.pop() + " breaks.";
@@ -248,18 +304,21 @@ function dodge() {
 }
 
 function defeatMonster() {
+  defeatedMonsters.add(fighting);
   gold += Math.floor(monsters[fighting].level * 6.7);
   xp += monsters[fighting].level;
   syncHud();
-  update(locations[4]);
+  update(locations[6]);
 }
 
 function lose() {
-  update(locations[5]);
+  update(locations[7]);
 }
 
 function winGame() {
-  update(locations[6]);
+  defeatedMonsters.add(DRAGON_INDEX);
+  syncHud();
+  update(locations[8]);
 }
 
 function restart() {
@@ -267,13 +326,16 @@ function restart() {
   health = 100;
   gold = 50;
   currentWeapon = 0;
+  fighting = undefined;
+  monsterHealth = undefined;
   inventory = ["stick"];
+  defeatedMonsters = new Set();
   syncHud();
   goTown();
 }
 
 function easterEgg() {
-  update(locations[7]);
+  update(locations[9]);
 }
 
 function pickTwo() {
